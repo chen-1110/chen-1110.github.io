@@ -40,7 +40,7 @@
             },
         },
         "theme": "default",
-        "author": "Tao He",
+        "author": "chen",
         "pdf": {
             "pageNumbers": true,
             "fontSize": 12,

@@ -1,10 +1,9 @@
 ---
 title: 关于
-author: Tao He
+author: chen
 date: 2022-02-04
 category: Jekyll
 layout: post
 ---
 
-
-This is an about page.
+chen~ 

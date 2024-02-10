@@ -1,6 +1,6 @@
 ---
 title: Using Footnotes
-author: Tao He
+author: chen
 date: 2023-12-12
 category: Jekyll
 layout: post

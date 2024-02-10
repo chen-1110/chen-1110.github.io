@@ -1,6 +1,6 @@
 ---
 title: MathJax and LaTeX
-author: Tao He
+author: chen
 date: 2023-10-14
 category: Jekyll
 layout: post
