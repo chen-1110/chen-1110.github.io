@@ -1,3 +1,10 @@
+---
+title: jvm
+author: chen
+category: Jekyll
+layout: post
+mermaid: true
+---
 # HotSpot JVM初探
 
 ![jvm (1)](https://hc-czw-bucket.oss-cn-beijing.aliyuncs.com/jvm/%E5%9B%BE%E7%89%87/%E6%96%87%E7%AB%A0%E6%9E%B6%E6%9E%84%E5%9B%BE.jpg)
