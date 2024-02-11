@@ -1,5 +1,5 @@
 ---
-layout: frontpage
+layout: page
 ---
 
 ## 欢迎来到我的网站
