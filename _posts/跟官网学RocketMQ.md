@@ -1,7 +1,7 @@
 ---
 title: 跟官方文档学rocketmq
 author: chen
-date: 2024-12-06
+date: 2024-12-05
 category: 技术文章
 layout: post
 mermaid: true
