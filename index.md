@@ -10,3 +10,5 @@ layout: frontpage
 
 用发展的眼光看待问题，小步快跑，善用placeHolder
 
+make self automatic
+
