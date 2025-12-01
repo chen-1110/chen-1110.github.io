@@ -2,7 +2,7 @@
 layout: post
 categories: 技术文章
 author: chen
-title: CompletableFuture如何使用
+title: 如何使用CompletableFuture
 ---
 ## 一、知识扫盲
 
