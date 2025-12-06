@@ -2,7 +2,7 @@
 layout: post
 categories: 技术文章
 author: chen
-title: SpringCloud-Alibaba分布式组件整理
+title: SpringCloudAlibaba分布式组件整理
 ---
 ![image-20251206180112908](https://raw.githubusercontent.com/chen-1110/image/main/image-20251206180112908.png)
 
