@@ -18,7 +18,8 @@ layout: default
 	  Posts
 	  </div>
       <div class="post-list-body">
-        <div class="all-posts" post-cate="All">
+<!--        <div class="all-posts" post-cate="All">-->
+        <div post-cate="All">
           {% for post in site.posts %}
             <a class="post-list-item" href="{{ post.url | prepend: site.baseurl }}">
               <h2>
@@ -29,8 +30,11 @@ layout: default
           {% endfor %}
         </div>
         <!-- <div class="posts-in-categories"> -->
+<!--        {% for category in site.categories %}-->
+<!--          <div post-cate="{{category | first}}">-->
         {% for category in site.categories %}
-          <div post-cate="{{category | first}}">
+        {% assign cate_name = category | first %}
+        <div post-cate="{{ cate_name }}" {% if cate_name=='技术文章' %}class="all-posts"{% endif %}>
             {% for posts in category  %}
               {% for post in posts %}
                 {% if post.url %}
@@ -54,7 +58,7 @@ layout: default
       <div class="categories-list-header">
         Categories
       </div>
-      
+
       <a href="javascript:;" class="categories-list-item" cate="All">
         All<span class="my-badge"> {{site.posts | size}}</span>
       </a>
