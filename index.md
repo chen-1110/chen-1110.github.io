@@ -9,4 +9,5 @@ layout: frontpage
 生活的胜利只属于快乐的人和健康的人
 
 用发展的眼光看待问题，小步快跑，善用placeHolder
+
 make me automatically hhh
