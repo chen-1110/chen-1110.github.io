@@ -6,6 +6,8 @@ category: 技术文章
 layout: post
 mermaid: true
 ---
+# 设计模式之Clean Code
+
 ## 一、前言
 
 21年实习的时候，还没有写过多少业务代码，也没见过所谓的屎山代码和与之对立的高质量代码，当时凭着自己对于java以及编程的理解，洋洋洒洒写下了这篇万字长文[重谈软件设计](https://chen-1110.github.io/2024/02/10/%E9%87%8D%E8%B0%88%E8%BD%AF%E4%BB%B6%E8%AE%BE%E8%AE%A1/ )，现在看来未免太过青涩，一晃三年过去，我从连debug都不会用的校招生到现在也换上了新的职业球衣，我也越来越意识到好的代码质量对于团队项目健壮的重要性，这篇博客就从实际出发，从clean code的角度再谈一次软件设计。
@@ -222,7 +224,6 @@ mermaid: true
 - 工厂方法
 
   ```java
-  
   @Component
   public class AppleSubscriptionFactory implements SubscriptionFactory {
   
@@ -279,7 +280,103 @@ mermaid: true
   }
   ```
 
-  
+- 简单工厂另一个例子
+
+场景：不同渠道的通知（短信 / 邮件）
+
+1. 抽象产品 & 具体产品
+
+```
+// 产品接口：消息发送器
+public interface MessageSender {
+    void send(String message);
+}
+
+// 具体产品：短信发送器
+public class SmsSender implements MessageSender {
+    @Override
+    public void send(String message) {
+        System.out.println("【短信】发送消息: " + message);
+    }
+}
+
+// 具体产品：邮件发送器
+public class EmailSender implements MessageSender {
+    @Override
+    public void send(String message) {
+        System.out.println("【邮件】发送消息: " + message);
+    }
+}
+```
+
+------
+
+2. 抽象“工厂”（这里叫通知）
+
+工厂方法模式里，“工厂”一般是一个**抽象类**或**接口**，里面定义一个**工厂方法**：`createSender()`。
+
+```
+// 抽象工厂/父类：通知
+public abstract class Notification {
+
+    // 工厂方法：交给子类决定创建哪种 sender
+    protected abstract MessageSender createSender();
+
+    // 业务方法：发送通知（复用逻辑）
+    public void notifyUser(String message) {
+        // 这里不关心具体是短信还是邮件
+        MessageSender sender = createSender();
+        // 执行发送逻辑
+        sender.send(message);
+    }
+}
+```
+
+------
+
+3. 具体“工厂”：短信通知、邮件通知
+
+每个子类实现自己的 `createSender()`，决定 new 哪个具体产品。
+
+```
+// 短信通知
+public class SmsNotification extends Notification {
+    @Override
+    protected MessageSender createSender() {
+        return new SmsSender();
+    }
+}
+
+// 邮件通知
+public class EmailNotification extends Notification {
+    @Override
+    protected MessageSender createSender() {
+        return new EmailSender();
+    }
+}
+```
+
+------
+
+4. 客户端使用
+
+客户端只依赖抽象 `Notification`，要换实现只需要换具体子类。
+
+```
+public class Client {
+    public static void main(String[] args) {
+        // 需要短信通知
+        Notification smsNotification = new SmsNotification();
+        smsNotification.notifyUser("您的验证码是 123456");
+
+        // 需要邮件通知
+        Notification emailNotification = new EmailNotification();
+        emailNotification.notifyUser("欢迎注册，我们已为您开通账号。");
+    }
+}
+```
+
+
 
 ### 3.3 建造者模式
 
@@ -449,21 +546,21 @@ IUserController userController = (IUserController) proxy.createProxy(new UserCon
 
 ```java
     public void handle(BenefitChangeEvent event, Integer userId) {
-        String lockKey = String.format("benefitChange.lock.%s", userId);
-        RLock lock = redissonClient.getLock(lockKey);
-        try {
-            lock.lock();
-            if (handleBenefitChange(event)) {
-                syncBenefitInfo(event.getUserId());
-            }
-        } catch (Exception e) {
-            log.error("handle error", e);
-        } finally {
-            if (lock != null && lock.isLocked() && lock.isHeldByCurrentThread()) {
-                lock.unlock();
-            }
-        }
+  String lockKey = String.format("benefitChange.lock.%s", userId);
+  RLock lock = redissonClient.getLock(lockKey);
+  try {
+    lock.lock();
+    if (handleBenefitChange(event)) {
+      syncBenefitInfo(event.getUserId());
     }
+  } catch (Exception e) {
+    log.error("handle error", e);
+  } finally {
+    if (lock != null && lock.isLocked() && lock.isHeldByCurrentThread()) {
+      lock.unlock();
+    }
+  }
+}
 ```
 
 - after（aop动态代理）
@@ -471,9 +568,9 @@ IUserController userController = (IUserController) proxy.createProxy(new UserCon
 ```java
 @DistributedLock(key = "'cloud:user:benefitChange:' + #userId")
 public void handle(BenefitChangeEvent event, Integer userId) {
-    if (handleBenefitChange(event)) {
-        syncBenefitInfo(event.getUserId());
-    }
+  if (handleBenefitChange(event)) {
+    syncBenefitInfo(event.getUserId());
+  }
 }
 
 
@@ -484,44 +581,44 @@ public void handle(BenefitChangeEvent event, Integer userId) {
 @Slf4j
 public class DistributedLockAspect {
 
-    @Autowired
-    private RedissonClient redissonClient;
+  @Autowired
+  private RedissonClient redissonClient;
 
-    private LocalVariableTableParameterNameDiscoverer discoverer = new LocalVariableTableParameterNameDiscoverer();
+  private LocalVariableTableParameterNameDiscoverer discoverer = new LocalVariableTableParameterNameDiscoverer();
 
-    @Around("@annotation(distributedLock)")
-    public Object around(ProceedingJoinPoint point, DistributedLock distributedLock) throws Throwable {
-        MethodSignature signature = (MethodSignature) point.getSignature();
-        Method method = signature.getMethod();
-        Object[] args = point.getArgs();
+  @Around("@annotation(distributedLock)")
+  public Object around(ProceedingJoinPoint point, DistributedLock distributedLock) throws Throwable {
+    MethodSignature signature = (MethodSignature) point.getSignature();
+    Method method = signature.getMethod();
+    Object[] args = point.getArgs();
 
-        final String[] paramNames = discoverer.getParameterNames(method);
-        if (paramNames != null) {
-            String key = distributedLock.key();
-            ExpressionParser parser = new SpelExpressionParser();
-            StandardEvaluationContext context = new StandardEvaluationContext();
-            for (int i = 0; i < paramNames.length; i++) {
-                context.setVariable(paramNames[i], args[i]);
-            }
+    final String[] paramNames = discoverer.getParameterNames(method);
+    if (paramNames != null) {
+      String key = distributedLock.key();
+      ExpressionParser parser = new SpelExpressionParser();
+      StandardEvaluationContext context = new StandardEvaluationContext();
+      for (int i = 0; i < paramNames.length; i++) {
+        context.setVariable(paramNames[i], args[i]);
+      }
 
-            String resolvedKey = parser.parseExpression(key).getValue(context, String.class);
+      String resolvedKey = parser.parseExpression(key).getValue(context, String.class);
 
-            String lockKey = String.format("%s", resolvedKey);
-            RLock lock = redissonClient.getLock(lockKey);
-            try {
-                lock.lock();
-                return point.proceed();
-            } catch (Exception e) {
-                log.error("DistributedLockAspect error, lockKey:{}", lockKey, e);
-                throw new RuntimeException(e);
-            } finally {
-                if (lock.isLocked() && lock.isHeldByCurrentThread()) {
-                    lock.unlock();
-                }
-            }
-        }
+      String lockKey = String.format("%s", resolvedKey);
+      RLock lock = redissonClient.getLock(lockKey);
+      try {
+        lock.lock();
         return point.proceed();
+      } catch (Exception e) {
+        log.error("DistributedLockAspect error, lockKey:{}", lockKey, e);
+        throw new RuntimeException(e);
+      } finally {
+        if (lock.isLocked() && lock.isHeldByCurrentThread()) {
+          lock.unlock();
+        }
+      }
     }
+    return point.proceed();
+  }
 }
 
 ```
@@ -673,8 +770,8 @@ InputStream in = new FileInputStream("/user/wangzheng/test.txt");
 InputStream bin = new BufferedInputStream(in);
 byte[] data = new byte[128];
 while (bin.read(data) != -1) {
-  //...
-}
+        //...
+        }
 ```
 
 ```java
@@ -683,11 +780,11 @@ public abstract class InputStream {
   public int read(byte b[]) throws IOException {
     return read(b, 0, b.length);
   }
-  
+
   public int read(byte b[], int off, int len) throws IOException {
     //...
   }
-  
+
   public long skip(long n) throws IOException {
     //...
   }
@@ -695,11 +792,11 @@ public abstract class InputStream {
   public int available() throws IOException {
     return 0;
   }
-  
+
   public void close() throws IOException {}
 
   public synchronized void mark(int readlimit) {}
-    
+
   public synchronized void reset() throws IOException {
     throw new IOException("mark/reset not supported");
   }
@@ -715,7 +812,7 @@ public class BufferedInputStream extends InputStream {
   protected BufferedInputStream(InputStream in) {
     this.in = in;
   }
-  
+
   //...实现基于缓存的读数据接口...  
 }
 
@@ -725,7 +822,7 @@ public class DataInputStream extends InputStream {
   protected DataInputStream(InputStream in) {
     this.in = in;
   }
-  
+
   //...实现读取基本类型数据的接口
 }
 ```
@@ -750,21 +847,21 @@ public interface ITarget {
 
 public class Adaptee {
   public void fa() { //... }
-  public void fb() { //... }
-  public void fc() { //... }
-}
+    public void fb() { //... }
+      public void fc() { //... }
+      }
 
-public class Adaptor extends Adaptee implements ITarget {
-  public void f1() {
-    super.fa();
-  }
-  
-  public void f2() {
-    //...重新实现f2()...
-  }
-  
-  // 这里fc()不需要实现，直接继承自Adaptee，这是跟对象适配器最大的不同点
-}
+      public class Adaptor extends Adaptee implements ITarget {
+        public void f1() {
+          super.fa();
+        }
+
+        public void f2() {
+          //...重新实现f2()...
+        }
+
+        // 这里fc()不需要实现，直接继承自Adaptee，这是跟对象适配器最大的不同点
+      }
 ```
 
 - 基于组合
@@ -779,29 +876,29 @@ public interface ITarget {
 
 public class Adaptee {
   public void fa() { //... }
-  public void fb() { //... }
-  public void fc() { //... }
-}
+    public void fb() { //... }
+      public void fc() { //... }
+      }
 
-public class Adaptor implements ITarget {
-  private Adaptee adaptee;
-  
-  public Adaptor(Adaptee adaptee) {
-    this.adaptee = adaptee;
-  }
-  
-  public void f1() {
-    adaptee.fa(); //委托给Adaptee
-  }
-  
-  public void f2() {
-    //...重新实现f2()...
-  }
-  
-  public void fc() {
-    adaptee.fc();
-  }
-}
+      public class Adaptor implements ITarget {
+        private Adaptee adaptee;
+
+        public Adaptor(Adaptee adaptee) {
+          this.adaptee = adaptee;
+        }
+
+        public void f1() {
+          adaptee.fa(); //委托给Adaptee
+        }
+
+        public void f2() {
+          //...重新实现f2()...
+        }
+
+        public void fc() {
+          adaptee.fc();
+        }
+      }
 ```
 
 ### 3.9 门面模式（略）
@@ -833,48 +930,48 @@ public class Adaptor implements ITarget {
 ```java
 // 生产者
 public String exportPreAction() {
-    exportPreActionEventBus.post(new ExportPreActionEvent("111"));
-    return "";
+  exportPreActionEventBus.post(new ExportPreActionEvent("111"));
+  return "";
 }
 
 // 消费者
 @Component
 public class ExportPreActionListener {
-    @Autowired
-    private RedisCacheManager redisCacheManager;
+  @Autowired
+  private RedisCacheManager redisCacheManager;
 
-    @Autowired
-    private PreDispatchExportProcessorTask preDispatchExportProcessorTask;
+  @Autowired
+  private PreDispatchExportProcessorTask preDispatchExportProcessorTask;
 
 
-    @Subscribe
-    public void consume(ExportPreActionEvent event) {
-        String a = null;
-        a.length();
-        List<String> hotUserIdList = redisCacheManager.lRange(RedisKeys.TASK_MANAGER_EXPORT_ANALYZE_USER_LIST_KEY, 0, -1);
-        if (CollectionUtils.isNotEmpty(hotUserIdList) && hotUserIdList.contains(event.getUserId())) {
-            preDispatchExportProcessorTask.preDispatchExportProcessor("");
-        }
+  @Subscribe
+  public void consume(ExportPreActionEvent event) {
+    String a = null;
+    a.length();
+    List<String> hotUserIdList = redisCacheManager.lRange(RedisKeys.TASK_MANAGER_EXPORT_ANALYZE_USER_LIST_KEY, 0, -1);
+    if (CollectionUtils.isNotEmpty(hotUserIdList) && hotUserIdList.contains(event.getUserId())) {
+      preDispatchExportProcessorTask.preDispatchExportProcessor("");
     }
+  }
 }
 
 // bus配置类
 @Configuration
 public class EventBusConfig {
 
-    private Logger logger = LoggerFactory.getLogger(ExportPreActionListener.class);
+  private Logger logger = LoggerFactory.getLogger(ExportPreActionListener.class);
 
-    @Bean(name = "exportPreActionEventBus")
-    public EventBus exportPreActionEventBus(@Autowired ExportPreActionListener exportPreActionListener) {
-        EventBus eventBus = new EventBus(new SubscriberExceptionHandler() {
-            @Override
-            public void handleException(Throwable exception, SubscriberExceptionContext context) {
-                logger.error("exportPreActionEventBus error, context:{}", context, exception);
-            }
-        });
-        eventBus.register(exportPreActionListener);
-        return eventBus;
-    }
+  @Bean(name = "exportPreActionEventBus")
+  public EventBus exportPreActionEventBus(@Autowired ExportPreActionListener exportPreActionListener) {
+    EventBus eventBus = new EventBus(new SubscriberExceptionHandler() {
+      @Override
+      public void handleException(Throwable exception, SubscriberExceptionContext context) {
+        logger.error("exportPreActionEventBus error, context:{}", context, exception);
+      }
+    });
+    eventBus.register(exportPreActionListener);
+    return eventBus;
+  }
 }
 
 ```
@@ -909,47 +1006,47 @@ public class EventBusConfig {
 public abstract class AbstractNotificationHandler {
 
 
-    @Override
-    public synchronized void handle(Object o) throws Exception {
-        String processed = NotificationStatus.notified.name();
+  @Override
+  public synchronized void handle(Object o) throws Exception {
+    String processed = NotificationStatus.notified.name();
 
-        prepare(o);
+    prepare(o);
 
-        String notifyId = getNotifyId(o);
-        if (!needHandle(notifyId)) {
-            return;
-        }
-        if (skip(o)) {
-            processed = NotificationStatus.processed.name();
-            saveNotification(o, processed);
-            return;
-        }
-
-        String lockKey = String.format(subscriptionLockKeyPreffix, getPlatform(), notifyId);
-        RLock lock = redissonClient.getLock(lockKey);
-
-        try {
-            if (!lock.isLocked()) {
-                if (lock.tryLock()) {
-                    doHandle(o);
-                    processed = NotificationStatus.processed.name();
-                }
-            }
-        } finally {
-            if (lock.isLocked() && lock.isHeldByCurrentThread()) {
-                lock.unlock();
-            }
-            //保存通知信息
-            saveNotification(o, processed);
-
-        }
+    String notifyId = getNotifyId(o);
+    if (!needHandle(notifyId)) {
+      return;
     }
-    
-    // 接口
-    protected boolean doHandle(Object o);
-    
- }
- 
+    if (skip(o)) {
+      processed = NotificationStatus.processed.name();
+      saveNotification(o, processed);
+      return;
+    }
+
+    String lockKey = String.format(subscriptionLockKeyPreffix, getPlatform(), notifyId);
+    RLock lock = redissonClient.getLock(lockKey);
+
+    try {
+      if (!lock.isLocked()) {
+        if (lock.tryLock()) {
+          doHandle(o);
+          processed = NotificationStatus.processed.name();
+        }
+      }
+    } finally {
+      if (lock.isLocked() && lock.isHeldByCurrentThread()) {
+        lock.unlock();
+      }
+      //保存通知信息
+      saveNotification(o, processed);
+
+    }
+  }
+
+  // 接口
+  protected boolean doHandle(Object o);
+
+}
+
 ```
 
 ```java
@@ -959,26 +1056,26 @@ public abstract class AbstractNotificationHandler {
 @Slf4j
 public class DefaultNotificationHandler extends AbstractAppleNotificationHandler {
 
-    @Override
-    protected boolean doHandle(AppleNotificationPayload appleNotificationPayload) throws Exception {
-        log.info("apple DidChangeRenewalPrefNotificationHandler receive payload:{}",JSONObject.toJSONString(appleNotificationPayload));
+  @Override
+  protected boolean doHandle(AppleNotificationPayload appleNotificationPayload) throws Exception {
+    log.info("apple DidChangeRenewalPrefNotificationHandler receive payload:{}",JSONObject.toJSONString(appleNotificationPayload));
 
-        AppleNotificationPayloadData data = appleNotificationPayload.getData();
-        String signedTransactionInfo = data.getSignedTransactionInfo();
+    AppleNotificationPayloadData data = appleNotificationPayload.getData();
+    String signedTransactionInfo = data.getSignedTransactionInfo();
 
-        JWSTransactionDecodedPayload transactionDecodedPayload = JwsUtil.decodeSignedData(signedTransactionInfo, JWSTransactionDecodedPayload.class);
+    JWSTransactionDecodedPayload transactionDecodedPayload = JwsUtil.decodeSignedData(signedTransactionInfo, JWSTransactionDecodedPayload.class);
 
-        log.info("DefaultNotificationHandler transactionDecodedPayload========:{}", JSONObject.toJSONString(transactionDecodedPayload));
+    log.info("DefaultNotificationHandler transactionDecodedPayload========:{}", JSONObject.toJSONString(transactionDecodedPayload));
 
-        return false;
-    }
+    return false;
+  }
 
 
-    @Override
-    protected BenefitChangeEvent buildBenefitChangeEvent() {
-        log.info("default Notification Handle ...only record");
-        return null;
-    }
+  @Override
+  protected BenefitChangeEvent buildBenefitChangeEvent() {
+    log.info("default Notification Handle ...only record");
+    return null;
+  }
 }
 ```
 
@@ -1025,55 +1122,55 @@ public class AClass {
 ```java
 @Component
 public class PreDispatchExportProcessorTask {
-    public ReturnT<String> preDispatchExportProcessor(String params) {
-        logger.info("PreDispatchExportProcessorTask start...");
-        try {
-            int targetFreePodNum = configUtils.totalMaxNum;
-            // 空闲数量策略
-            for (ExportAnalyzeStrategy strategy : exportAnalyzeStrategyList) {
-                if (strategy.support()) {
-                    targetFreePodNum = strategy.execute(targetFreePodNum);
-                }
-            }
-            return targetFreePodNum;
+  public ReturnT<String> preDispatchExportProcessor(String params) {
+    logger.info("PreDispatchExportProcessorTask start...");
+    try {
+      int targetFreePodNum = configUtils.totalMaxNum;
+      // 空闲数量策略
+      for (ExportAnalyzeStrategy strategy : exportAnalyzeStrategyList) {
+        if (strategy.support()) {
+          targetFreePodNum = strategy.execute(targetFreePodNum);
+        }
+      }
+      return targetFreePodNum;
     }
-}
+  }
 
-// 策略接口
-public interface ExportAnalyzeStrategy {
+  // 策略接口
+  public interface ExportAnalyzeStrategy {
 
     boolean support();
 
     int execute(int count);
-}
+  }
 
-// 策略类1
-@Component
-public class SpecialDayExportStrategy implements ExportAnalyzeStrategy{
+  // 策略类1
+  @Component
+  public class SpecialDayExportStrategy implements ExportAnalyzeStrategy{
     @Override
     public boolean support() {
-        return true;
+      return true;
     }
 
     @Override
     public int execute(int count) {
-        return count * 2;
+      return count * 2;
     }
-}
+  }
 
-// 策略类2
-@Component
-public class CommonAdjustStrategy implements ExportAnalyzeStrategy {
+  // 策略类2
+  @Component
+  public class CommonAdjustStrategy implements ExportAnalyzeStrategy {
     @Override
     public boolean support() {
-        return false;
+      return false;
     }
 
     @Override
     public int execute(int count) {
-        return count;
+      return count;
     }
-}
+  }
 ```
 
 
