@@ -19,8 +19,8 @@ layout: default
       </div>
       <div class="post-list-body">
 <!--        {% for category in site.categories %}-->
-        <div class="all-posts" post-cate="技术文章">
-          {% for post in site.posts %}
+        <div class="all-posts" post-cate="All">
+          {% for post in site.categories["技术文章"] %}
           <a class="post-list-item" href="{{ post.url | prepend: site.baseurl }}">
             <h2>
               {{ post.title }}
