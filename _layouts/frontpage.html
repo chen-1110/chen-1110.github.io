@@ -18,16 +18,16 @@ layout: default
         Posts
       </div>
       <div class="post-list-body">
-        <div class="all-posts" post-cate="All">
-          {% for post in site.posts %}
-          <a class="post-list-item" href="{{ post.url | prepend: site.baseurl }}">
-            <h2>
-              {{ post.title }}
-            </h2>
-<!--            <span class="">{{ post.date | date: "%b %-d, %Y" }}</span>-->
-          </a>
-          {% endfor %}
-        </div>
+<!--        <div class="all-posts" post-cate="All">-->
+<!--          {% for post in site.posts %}-->
+<!--          <a class="post-list-item" href="{{ post.url | prepend: site.baseurl }}">-->
+<!--            <h2>-->
+<!--              {{ post.title }}-->
+<!--            </h2>-->
+<!--&lt;!&ndash;            <span class="">{{ post.date | date: "%b %-d, %Y" }}</span>&ndash;&gt;-->
+<!--          </a>-->
+<!--          {% endfor %}-->
+<!--        </div>-->
         <!-- <div class="posts-in-categories"> -->
         {% for category in site.categories %}
         <div post-cate="{{category | first}}">
