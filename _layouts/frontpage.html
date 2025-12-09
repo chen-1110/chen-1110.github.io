@@ -19,7 +19,7 @@ layout: default
       </div>
       <div class="post-list-body">
         {% for category in site.categories %}
-        <div post-cate="{{category | first}}">
+        <div class="all-posts" post-cate="{{category | first}}">
           {% for post in site.posts %}
           <a class="post-list-item" href="{{ post.url | prepend: site.baseurl }}">
             <h2>
@@ -29,6 +29,7 @@ layout: default
           </a>
           {% endfor %}
         </div>
+        {% endfor %}
         <!-- <div class="posts-in-categories"> -->
         {% for category in site.categories %}
         <div post-cate="{{category | first}}">
